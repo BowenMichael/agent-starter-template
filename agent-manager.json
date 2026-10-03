@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "agent-manager-manifest",
+  "version": "1.0.0",
+  "description": "Configuration manifest for interfacing a repository with Google Antigravity Agent Manager",
+  "manager": {
+    "project_board_id": "PVT_kwHOAgkA3s4Blmhh",
+    "poll_interval_seconds": 15,
+    "default_branch": "master",
+    "worktree_root": ".worktrees"
+  },
+  "columns": {
+    "backlog": "📥 Backlog",
+    "ready": "📋 Ready for Agent",
+    "in_progress": "⚡ In Progress",
+    "in_review": "🔍 In Review",
+    "done": "✅ Done"
+  },
+  "triggers": {
+    "labels": ["agent:ready", "ready-for-agent"],
+    "project_board_status": "📋 Ready for Agent",
+    "webhook_events": ["issues", "issue_comment", "projects_v2_item"]
+  },
+  "guardrails": {
+    "max_turns": 15,
+    "worktree_isolation": true,
+    "suppress_logs": true,
+    "board_status_only": true
+  }
+}

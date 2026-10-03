@@ -28,8 +28,10 @@ const TRACKED_FILES = [
   '.github/workflows/agent-task-dispatcher.yml',
   '.github/workflows/agent-template-sync.yml',
   'mcp_config.template.json',
+  'agent-manager.json',
   'scripts/agent-sync.js',
-  'docs/TEMPLATE_SYNC_GUIDE.md'
+  'docs/TEMPLATE_SYNC_GUIDE.md',
+  'docs/AGENT_MANAGER_INTEGRATION.md'
 ];
 
 // CLI Argument Parsing
