@@ -111,25 +111,36 @@ function getAuthToken() {
 // Fetch file from GitHub API / Raw content
 function fetchUpstreamFile(filePath) {
   return new Promise((resolve) => {
-    const rawUrl = `https://raw.githubusercontent.com/${upstreamRepo}/${upstreamBranch}/${filePath}`;
     const token = getAuthToken();
+    const apiUrl = `https://api.github.com/repos/${upstreamRepo}/contents/${filePath}?ref=${upstreamBranch}`;
     const headers = {
-      'User-Agent': 'agent-sync-tool'
+      'User-Agent': 'agent-sync-tool',
+      'Accept': 'application/vnd.github.raw'
     };
     if (token) {
       headers['Authorization'] = `token ${token}`;
     }
 
-    https.get(rawUrl, { headers }, (res) => {
+    https.get(apiUrl, { headers }, (res) => {
       if (res.statusCode === 404) {
         return resolve({ exists: false, content: null });
       }
-      if (res.statusCode !== 200) {
-        return resolve({ exists: false, error: `HTTP ${res.statusCode}` });
+      if (res.statusCode === 200) {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => resolve({ exists: true, content: data }));
+        return;
       }
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ exists: true, content: data }));
+
+      // Fallback to raw.githubusercontent.com
+      const rawUrl = `https://raw.githubusercontent.com/${upstreamRepo}/${upstreamBranch}/${filePath}?t=${Date.now()}`;
+      https.get(rawUrl, { headers: { 'User-Agent': 'agent-sync-tool' } }, (rawRes) => {
+        if (rawRes.statusCode === 404) return resolve({ exists: false, content: null });
+        if (rawRes.statusCode !== 200) return resolve({ exists: false, error: `HTTP ${rawRes.statusCode}` });
+        let data = '';
+        rawRes.on('data', chunk => data += chunk);
+        rawRes.on('end', () => resolve({ exists: true, content: data }));
+      }).on('error', (err) => resolve({ exists: false, error: err.message }));
     }).on('error', (err) => {
       resolve({ exists: false, error: err.message });
     });
