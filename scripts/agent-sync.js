@@ -347,13 +347,13 @@ function getCloneUrl(repo) {
       fs.copyFileSync(src, dest);
     }
 
+    execSync('git add -A', { cwd: tmpDir, stdio: 'pipe' });
     const gitStatus = execSync('git status --porcelain', { cwd: tmpDir, encoding: 'utf8' }).trim();
     if (!gitStatus) {
-      console.log('   No file differences found after staging.');
+      console.log('   ✨ Upstream working tree is already up to date. No new commit needed.');
       return;
     }
 
-    execSync('git add -A', { cwd: tmpDir, stdio: 'pipe' });
     const commitMsg = `feat(sync): incorporate agent rule & workflow updates from ${path.basename(REPO_ROOT)}`;
     execSync(`git commit -m "${commitMsg}"`, { cwd: tmpDir, stdio: 'pipe' });
 
