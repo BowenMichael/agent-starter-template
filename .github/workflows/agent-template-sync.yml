@@ -1,0 +1,54 @@
+name: Upstream Agent Template Sync
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'AGENTS.md'
+      - '.github/ISSUE_TEMPLATE/agent_task.md'
+      - '.github/pull_request_template.md'
+      - '.github/workflows/agent-task-dispatcher.yml'
+      - '.github/workflows/agent-template-sync.yml'
+      - 'mcp_config.template.json'
+      - 'scripts/agent-sync.js'
+      - 'docs/TEMPLATE_SYNC_GUIDE.md'
+  workflow_dispatch:
+    inputs:
+      upstream_repo:
+        description: 'Upstream template repository (owner/repo)'
+        required: true
+        default: 'BowenMichael/agent-starter-template'
+      upstream_branch:
+        description: 'Upstream branch target'
+        required: true
+        default: 'main'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-upstream:
+    name: Sync Agent Guidelines to Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Downstream Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Sync Divergence
+        id: check_status
+        run: |
+          node scripts/agent-sync.js --status --upstream "${{ github.event.inputs.upstream_repo || 'BowenMichael/agent-starter-template' }}" --branch "${{ github.event.inputs.upstream_branch || 'main' }}"
+
+      - name: Propose Upstream Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.TEMPLATE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/agent-sync.js --push --upstream "${{ github.event.inputs.upstream_repo || 'BowenMichael/agent-starter-template' }}" --branch "${{ github.event.inputs.upstream_branch || 'main' }}"

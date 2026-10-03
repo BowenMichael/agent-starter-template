@@ -1,40 +1,38 @@
 # Autonomous Agent Guidelines & Budget Guardrails
 
-This project follows an **Autonomous, Issue-Driven Development Lifecycle**. All AI agents operating in this repository must strictly adhere to the following rules:
-
----
-
 ## 1. Autonomous Task Lifecycle & Worktree Isolation
 
-### A. Issue Takeover Notification
-When picking up an issue from GitHub:
-1. **Selection**: Look for issues labeled `agent:ready`.
-2. **State Transition**:
-   - Remove label `agent:ready`.
-   - Add label `agent:in-progress`.
-3. **Mandatory Issue Takeover Comment**:
-   The agent **MUST immediately comment** on the GitHub issue to notify the team that work has begun:
+### A. Board Status-Driven Takeover & Comment Ingestion
+The **GitHub Project Board** (`F1 Viewer - Sprint & Agent Board`) is the primary driver of agent task execution:
+1. **Board Status Trigger**: Agents actively monitor the project board for items in the **`📋 Ready for Agent`** column.
+2. **Review User Comments First**: Before writing any code, the agent MUST read the latest comments on the issue to ingest user feedback, questions, and scope refinements.
+3. **State Transition**:
+   - Move the card on the Project Board to **`⚡ In Progress`**.
+   - Ensure the issue label is set to `agent:in-progress`.
+4. **Mandatory Issue Takeover Comment**:
+   The agent **MUST immediately comment** on the GitHub issue acknowledging the user's specific comments and outlining the updated plan:
    ```markdown
    🤖 **Agent Takeover: Development Started**
 
+   - **Feedback Acknowledged**: [Briefly address the user's latest comment/request]
    - **Worktree**: `.worktrees/issue-<number>`
    - **Branch**: `feat/issue-<number>-<short-description>`
    - **Planned Approach**:
-     1. [Step 1: Implementation blueprint]
-     2. [Step 2: Core changes & testing]
-     3. [Step 3: Verification & demo recording]
+     1. [Step 1: Next immediate deliverable]
+     2. [Step 2: Component / Implementation]
+     3. [Step 3: Verification & demo video recording]
    - **Budget Guardrail**: Max 15 tool execution turns before pause & approval.
    ```
 
 ### B. Git Worktree Isolation (Strictly Required)
-To prevent interference with the developer's active editor, other agent sessions, or local uncommitted changes:
+To prevent interference with the user's active editor, other agent sessions, or local uncommitted changes:
 1. **Never work in the root directory**: All feature development must occur in an isolated Git worktree.
 2. **Worktree Creation**:
    ```bash
    git worktree add -b feat/issue-<number>-<short-description> .worktrees/issue-<number> master
    ```
 3. **Execution**:
-   - All file edits, builds, tests, and commits must be scoped to `.worktrees/issue-<number>`.
+   - All file edits, typechecks, component creation, and commits must be scoped to `.worktrees/issue-<number>`.
 4. **Completion & Cleanup**:
    - Push the branch from the worktree:
      ```bash
@@ -85,8 +83,32 @@ When a threshold is reached, the agent **MUST IMMEDIATELY PAUSE** execution on t
    ### 📊 Task Insights
    - **Progress Completed**: [Summary of files edited and components built]
    - **Remaining Work**: [Exact items needed to reach acceptance criteria]
-   - **Cost / Complexity Driver**: [Explain why token consumption is high]
+   - **Cost / Complexity Driver**: [Explain why token consumption is high, e.g. breaking API changes, ambiguous requirement, circular imports]
    - **Proposed Next Action**: [Option A: Approve 10 more turns to finish; Option B: Narrow scope; Option C: Human intervention]
    ```
 3. **Await User Approval**:
    - The agent MUST NOT take further code modification actions until the user explicitly responds with approval to proceed.
+
+---
+
+## 3. 🔄 Template Synchronization Protocol (Upstream Feedback Loop)
+
+To prevent fragmentation and ensure learnings, guardrails, and workflow improvements benefit the entire agent ecosystem:
+
+1. **Check Sync Divergence**:
+   - When introducing improvements to agent guidelines (`AGENTS.md`), issue templates, workflows, or MCP configuration, run:
+     ```bash
+     node scripts/agent-sync.js --status
+     ```
+2. **Propose Improvements Upstream**:
+   - To propagate agent framework enhancements back to `BowenMichael/agent-starter-template`, run:
+     ```bash
+     node scripts/agent-sync.js --push
+     ```
+   - Alternatively, automated CI (`.github/workflows/agent-template-sync.yml`) will propose a PR upon merging changes to master.
+3. **Ingest Upstream Updates**:
+   - Before starting major agent refactoring tasks, agents may check for upstream template updates:
+     ```bash
+     node scripts/agent-sync.js --pull
+     ```
+
