@@ -27,9 +27,14 @@ The **GitHub Project Board** (`F1 Viewer - Sprint & Agent Board`) is the primary
 ### B. Git Worktree Isolation (Strictly Required)
 To prevent interference with the user's active editor, other agent sessions, or local uncommitted changes:
 1. **Never work in the root directory**: All feature development must occur in an isolated Git worktree.
-2. **Worktree Creation**:
+2. **Worktree Creation & Upstream Sync**:
    ```bash
    git worktree add -b feat/issue-<number>-<short-description> .worktrees/issue-<number> master
+   ```
+   *Always pull/merge the latest upstream changes into the worktree branch before beginning work:*
+   ```bash
+   git fetch origin
+   git merge origin/master # or default branch (main/master)
    ```
 3. **Execution**:
    - All file edits, typechecks, component creation, and commits must be scoped to `.worktrees/issue-<number>`.
